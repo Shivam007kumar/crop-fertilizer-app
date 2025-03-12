@@ -33,8 +33,14 @@ def preprocess_image(img, target_size=(128, 128)):
 def get_fertilizer_recommendation(predicted_crop):
     row = fertilizer_data[fertilizer_data['Plant Name'] == predicted_crop]
     if not row.empty:
-        return row.iloc[0]['Fertilizer Type(s)']
-    return "No recommendation found."
+        return {
+            'Fertilizer Type': row.iloc[0]['Fertilizer Type(s)'],
+            'NPK Ratio': row.iloc[0].get('NPK Ratio'),
+            'Application Method': row.iloc[0].get('Application Method'),
+            'Application Timing': row.iloc[0].get('Application Timing'),
+            'Additional Notes': row.iloc[0].get('Additional Notes')
+        }
+    return None  # Return None when no recommendation is found
 
 # Streamlit UI setup
 st.set_page_config(page_title="Crop Predictor & Fertilizer Recommender", layout="centered")
@@ -59,5 +65,13 @@ if uploaded_file is not None:
     st.success(f"🌿 Predicted Crop: **{predicted_crop}**")
 
     # Get fertilizer recommendation
-    fertilizer = get_fertilizer_recommendation(predicted_crop)
-    st.info(f"🛠️ Recommended Fertilizer: **{fertilizer}**")
+    recommendation = get_fertilizer_recommendation(predicted_crop)
+
+    if recommendation:
+        st.info(f"🛠️ Recommended Fertilizer: **{recommendation['Fertilizer Type']}**")
+        st.write(f"📌 **NPK Ratio(s):** {recommendation['NPK Ratio']}")
+        st.write(f"📌 **Application Method:** {recommendation['Application Method']}")
+        st.write(f"📌 **Application Timing:** {recommendation['Application Timing']}")
+        st.write(f"📌 **Additional Notes:** {recommendation['Additional Notes']}")
+    else:
+        st.warning("⚠️ No fertilizer recommendation found for this crop.")
